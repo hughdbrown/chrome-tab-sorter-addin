@@ -26,8 +26,7 @@ function unique(tabs) {
     var unique_tabs = {};
     var removes = [];
     var arr = [];
-    for (var i = 0; i < tabs.length; i++) {
-        var tab = tabs[i];
+    for (const [i, tab] of tabs.entries()) {
         if (unique_tabs[tab.url] === undefined) {
             // Tab url not present -- add it.
             unique_tabs[tab.url] = tab;
@@ -45,8 +44,8 @@ function unique(tabs) {
 }
 
 function reset_order(sorted_tabs) {
-    for (var i = 0; i < sorted_tabs.length; i++) {
-        chrome.tabs.move(sorted_tabs[i].id, {"index": i});
+    for (const [i, t] of sorted_tabs.entries()) {
+        chrome.tabs.move(t.id, {"index": i});
     }
 }
 
@@ -61,12 +60,14 @@ function unique_tabs(tabs) {
 }
 
 function sort_all_tabs() {
-    chrome.tabs.getAllInWindow(this.jstdata, sort_tabs);
+    console.log("sort_all_tabs");
+    chrome.tabs.query({}, sort_tabs);
 }
 
 function unique_all_tabs() {
-    chrome.tabs.getAllInWindow(this.jstdata, unique_tabs);
+    console.log("unique_all_tabs");
+    chrome.tabs.query({}, unique_tabs);
 }
 
-/*sort_all_tabs();*/
-unique_all_tabs();
+//unique_all_tabs();
+sort_all_tabs();
