@@ -33,11 +33,14 @@ function unique(tabs) {
             arr.push(tab);
 	}
 	else {
-	    // Add tab to list to be removed.
-	    removes.push(tab.id);
+            // Add tab to list to be removed.
+            removes.push(tab.id);
 	}
     }
-    chrome.tabs.remove(removes);
+
+    if (removes.length > 0) {
+        chrome.tabs.remove(removes);
+    }
 
     // Return sorted unique tabs.
     return sorter(arr);
@@ -60,14 +63,18 @@ function unique_tabs(tabs) {
 }
 
 function sort_all_tabs() {
-    console.log("sort_all_tabs");
     chrome.tabs.query({}, sort_tabs);
 }
 
 function unique_all_tabs() {
-    console.log("unique_all_tabs");
     chrome.tabs.query({}, unique_tabs);
 }
 
-//unique_all_tabs();
-sort_all_tabs();
+chrome.runtime.onMessage.addListener((msg, sender, response) => {
+    if (msg.name === "sortMsg") {
+        sort_all_tabs();
+    }
+    else if (msg.name === "uniqueMsg") {
+        unique_all_tabs();
+    }
+});
