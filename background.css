@@ -1,0 +1,26 @@
+button {
+    background-color: #03883E;
+    color: white;
+
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 8px 6px;
+    border-radius: 8px;
+    width: 100px;
+    box-shadow: none;
+}
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px lightskyblue;
+}
+button:hover {
+    background-color: #aaa;
+}
+button:active {
+    background-color: #333;
+    border-color: #333;
+    color: #eee;
+}
