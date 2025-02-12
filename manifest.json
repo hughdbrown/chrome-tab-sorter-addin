@@ -18,6 +18,12 @@
     }],
     "permissions": [
         "tabs"
+    ],
+    "content_scripts": [
+        {
+            "css": ["background.css"],
+            "matches": ["<all_urls>"]
+        }
     ]
 }
 
