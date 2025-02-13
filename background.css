@@ -1,4 +1,4 @@
-button {
+button.ext {
     background-color: #03883E;
     color: white;
 
@@ -12,14 +12,14 @@ button {
     width: 100px;
     box-shadow: none;
 }
-button:focus {
+button.ext:focus {
     outline: none;
     box-shadow: 0 0 0 3px lightskyblue;
 }
-button:hover {
+button.ext:hover {
     background-color: #aaa;
 }
-button:active {
+button.ext:active {
     background-color: #333;
     border-color: #333;
     color: #eee;
