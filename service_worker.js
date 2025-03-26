@@ -1,106 +1,96 @@
-function sorter(tabs) {
+function _normalize(urlObj) {
+    try {
+        const hostParts = urlObj.hostname.toUpperCase().split('.');
+        const domain = hostParts.slice(-2).join('.');
+        return domain + urlObj.pathname.toUpperCase();
+    } catch {
+        const url = urlObj.url;
+        return url.toUpperCase();
+    }
+}
+
+
+async function sorter(tabs) {
     const startTime = performance.now();
-    var compare = function(arg1, arg2) {
-        if (arg1 == arg2) { return 0; }
-        else { return arg1 > arg2 ? 1 : -1; }
-    };
-    var _normalize = function(url) {
-        var x = url.replace("https://", "").replace("http://", "").toUpperCase();
-        var i = x.indexOf('/');
-        var s = x.substring(0, i - 1);
-        var t = x.substring(i - 1, x.length);
-        var parts = s.split(".");
-        var company = parts[parts.length - 2];
-        var tla = parts[parts.length - 1];
-        return company + "." + tla + t ;
-    };
+    const normalizedMap = new Map();
 
-    var normalized = {};
-    var normalize = function(url) {
-        var n = normalized[url];
-        if (n === undefined) {
-             n = _normalize(url);
-             normalized[url] = n;
+    // Precompute all normalized values
+    const tabsWithNormalized = tabs.map(tab => {
+        const url = tab.url;
+        if (!normalizedMap.has(url)) {
+            normalizedMap.set(url, _normalize(url));
         }
-        return n;
-    };
-
-    var sorted_tabs = tabs.sort(function (tab1, tab2) {
-        var u1 = normalize(tab1.url);
-        var u2 = normalize(tab2.url);
-        return compare(u1, u2);
+        return { tab, normalized: normalizedMap.get(url) };
     });
 
+    // Sort with precomputed values
+    tabsWithNormalized.sort((a, b) => a.normalized.localeCompare(b.normalized));
+
+    const sorted_tabs = tabsWithNormalized.map(t => t.tab);
+
     const elapsed = Math.floor(1000 * (performance.now() - startTime));
-    const length = Object.keys(normalized).length;
-    console.log(`Sorter: ${elapsed} ms / ${length} urls`);
+    console.log(`Sorter: ${elapsed} ms`);
 
     return sorted_tabs;
 }
 
-function unique(tabs) {
+
+async function unique(tabs) {
     const startTime = performance.now();
 
     // Get unique tabs by url in a dict.
-    // var unique_tabs = {};
-    var unique_tabs = new Set();
-    var removes = [];
-    var arr = [];
-    for (const [i, tab] of tabs.entries()) {
-        //if (unique_tabs[tab.url] === undefined) {
-        //    // Tab url not present -- add it.
-        //    unique_tabs[tab.url] = tab;
-        //    arr.push(tab);
-	//}
-        if (unique_tabs.has(tab.url)) {
-            // Add tab to list to be removed.
+    const seen = new Map();
+    const keeps = [];
+    const removes = [];
+
+    for (const tab of tabs) {
+        if (seen.has(tab.url)) {
             removes.push(tab.id);
+        } else {
+            seen.set(tab.url, true);
+            keeps.push(tab);
         }
-	else {
-            unique_tabs.add(tab.url);
-            arr.push(tab);
-	}
     }
+
     const elapsed = Math.floor(1000 * (performance.now() - startTime));
-    const length = unique_tabs.size;
-    console.log(`Find unique: ${elapsed} ms / ${length} urls`);
+    console.log(`Find unique: ${elapsed} ms`);
 
     if (removes.length > 0) {
         const startTime = performance.now();
         const length = removes.length;
 
-        chrome.tabs.remove(removes);
+        await chrome.tabs.remove(removes);
 
         const elapsed = Math.floor(1000 * (performance.now() - startTime));
         console.log(`Remove unique: ${elapsed} ms / ${length} urls`);
     }
 
     // Return sorted unique tabs.
-    return sorter(arr);
+    var x = await sorter(arr);
+    return x;
 }
 
-function reset_order(sorted_tabs) {
-    for (const [i, t] of sorted_tabs.entries()) {
-        chrome.tabs.move(t.id, {"index": i});
-    }
+async function reset_order(sorted_tabs) {
+    const tabIds = sorted_tabs.map(t => t.id);
+    await chrome.tabs.move(tabIds, { index: 0 });
 }
 
-function sort_tabs(tabs) {
-    var sorted_tabs = sorter(tabs);
-    reset_order(sorted_tabs);
+async function sort_tabs(tabs) {
+    var sorted_tabs = await sorter(tabs);
+    await reset_order(sorted_tabs);
 }
 
-function unique_tabs(tabs) {
-    var unique_tabs = unique(tabs);
-    reset_order(unique_tabs);
+async function unique_tabs(tabs) {
+    var unique_tabs = await unique(tabs);
+    await reset_order(unique_tabs);
 }
 
-function sort_all_tabs() {
-    chrome.tabs.query({}, sort_tabs);
+async function sort_all_tabs() {
+    await chrome.tabs.query({}, sort_tabs);
 }
 
-function unique_all_tabs() {
-    chrome.tabs.query({}, unique_tabs);
+async function unique_all_tabs() {
+    await chrome.tabs.query({}, unique_tabs);
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, response) => {
