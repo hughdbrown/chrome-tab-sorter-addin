@@ -1,14 +1,14 @@
-function _normalize(urlObj) {
-    try {
-        const hostParts = urlObj.hostname.toUpperCase().split('.');
-        const domain = hostParts.slice(-2).join('.');
-        return domain + urlObj.pathname.toUpperCase();
-    } catch {
-        const url = urlObj.url;
-        return url.toUpperCase();
-    }
+function _normalize(url) {
+    const x = url.replace("https://", "").replace("http://", "").toUpperCase();
+    const i = x.indexOf('/');
+    const s = x.substring(0, i - 1);
+    const t = x.substring(i - 1, x.length);
+    const parts = s.split(".");
+    const company = parts[parts.length - 2];
+    const tla = parts[parts.length - 1];
+    //return company + "." + tla + t ;
+    return `{company}.{tla}{t}`;
 }
-
 
 async function sorter(tabs) {
     const startTime = performance.now();
@@ -28,7 +28,10 @@ async function sorter(tabs) {
 
     const sorted_tabs = tabsWithNormalized.map(t => t.tab);
 
-    const elapsed = Math.floor(1000 * (performance.now() - startTime));
+    const endTime = performance.now();
+    const elapsed = Math.floor(1000 * (endTime - startTime));
+    console.log(`start: ${startTime}`);
+    console.log(`end: ${endTime}`);
     console.log(`Sorter: ${elapsed} ms`);
 
     return sorted_tabs;
@@ -36,12 +39,13 @@ async function sorter(tabs) {
 
 
 async function unique(tabs) {
-    const startTime = performance.now();
-
     // Get unique tabs by url in a dict.
     const seen = new Map();
     const keeps = [];
     const removes = [];
+
+    {
+    const startTime = performance.now();
 
     for (const tab of tabs) {
         if (seen.has(tab.url)) {
@@ -51,22 +55,28 @@ async function unique(tabs) {
             keeps.push(tab);
         }
     }
+    const endTime = performance.now();
 
-    const elapsed = Math.floor(1000 * (performance.now() - startTime));
-    console.log(`Find unique: ${elapsed} ms`);
+    const elapsed1 = Math.floor(1000 * (endTime - startTime));
+    console.log(`Find unique: ${elapsed1} ms`);
+    console.log(`start: ${startTime}`);
+    console.log(`end: ${endTime}`);
+    }
+
 
     if (removes.length > 0) {
         const startTime = performance.now();
-        const length = removes.length;
-
         await chrome.tabs.remove(removes);
+        const endTime = performance.now();
 
-        const elapsed = Math.floor(1000 * (performance.now() - startTime));
-        console.log(`Remove unique: ${elapsed} ms / ${length} urls`);
+        const elapsed2 = Math.floor(1000 * (endTime - startTime));
+        console.log(`Remove unique: ${elapsed2} ms / ${removes.length} urls`);
+    console.log(`start: ${startTime}`);
+    console.log(`end: ${endTime}`);
     }
 
     // Return sorted unique tabs.
-    var x = await sorter(arr);
+    const x = await sorter(keeps);
     return x;
 }
 
