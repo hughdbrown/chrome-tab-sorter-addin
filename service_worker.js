@@ -7,7 +7,7 @@ function _normalize(url) {
     const company = parts[parts.length - 2];
     const tla = parts[parts.length - 1];
     //return company + "." + tla + t ;
-    return `{company}.{tla}{t}`;
+    return `${company}.${tla}${t}`;
 }
 
 async function sorter(tabs) {
