@@ -21,24 +21,14 @@ async function sorter(tabs) {
     // Sort with precomputed values
     tabsWithNormalized.sort((a, b) => a.normalized.localeCompare(b.normalized));
 
-    const sorted_tabs = tabsWithNormalized.map(t => t.tab);
-
-    const endTime = performance.now();
-    const elapsed = Math.floor(1000 * (endTime - startTime));
-    console.log(`Sorter: ${elapsed} ms`);
-
-    return sorted_tabs;
+    return tabsWithNormalized.map(t => t.tab);
 }
-
 
 async function unique(tabs) {
     // Get unique tabs by url in a dict.
     const seen = new Map();
     const keeps = [];
     const removes = [];
-
-    {
-    const startTime1 = performance.now();
 
     for (const tab of tabs) {
         if (seen.has(tab.url)) {
@@ -48,23 +38,9 @@ async function unique(tabs) {
             keeps.push(tab);
         }
     }
-    const endTime1 = performance.now();
-
-    const elapsed1 = Math.floor(1000 * (endTime1 - startTime1));
-    console.log(`Find unique: ${elapsed1} ms`);
-    console.log(`startTime1: ${startTime1}`);
-    console.log(`endTime1: ${endTime1}`);
-    }
 
     if (removes.length > 0) {
-        const startTime2 = performance.now();
         await chrome.tabs.remove(removes);
-        const endTime2 = performance.now();
-
-        const elapsed2 = Math.floor(1000 * (endTime2 - startTime2));
-        console.log(`Remove unique: ${elapsed2} ms / ${removes.length} urls`);
-    console.log(`startTime2: ${startTime2}`);
-    console.log(`endTime2: ${endTime2}`);
     }
 
     // Return sorted unique tabs.
