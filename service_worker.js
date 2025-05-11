@@ -12,15 +12,10 @@ function _normalize(url) {
 
 async function sorter(tabs) {
     const startTime = performance.now();
-    const normalizedMap = new Map();
 
     // Precompute all normalized values
     const tabsWithNormalized = tabs.map(tab => {
-        const url = tab.url;
-        if (!normalizedMap.has(url)) {
-            normalizedMap.set(url, _normalize(url));
-        }
-        return { tab, normalized: normalizedMap.get(url) };
+        return { "tab": tab, "normalized": _normalize(tab.url) };
     });
 
     // Sort with precomputed values
@@ -30,8 +25,6 @@ async function sorter(tabs) {
 
     const endTime = performance.now();
     const elapsed = Math.floor(1000 * (endTime - startTime));
-    console.log(`start: ${startTime}`);
-    console.log(`end: ${endTime}`);
     console.log(`Sorter: ${elapsed} ms`);
 
     return sorted_tabs;
@@ -45,7 +38,7 @@ async function unique(tabs) {
     const removes = [];
 
     {
-    const startTime = performance.now();
+    const startTime1 = performance.now();
 
     for (const tab of tabs) {
         if (seen.has(tab.url)) {
@@ -55,24 +48,23 @@ async function unique(tabs) {
             keeps.push(tab);
         }
     }
-    const endTime = performance.now();
+    const endTime1 = performance.now();
 
-    const elapsed1 = Math.floor(1000 * (endTime - startTime));
+    const elapsed1 = Math.floor(1000 * (endTime1 - startTime1));
     console.log(`Find unique: ${elapsed1} ms`);
-    console.log(`start: ${startTime}`);
-    console.log(`end: ${endTime}`);
+    console.log(`startTime1: ${startTime1}`);
+    console.log(`endTime1: ${endTime1}`);
     }
 
-
     if (removes.length > 0) {
-        const startTime = performance.now();
+        const startTime2 = performance.now();
         await chrome.tabs.remove(removes);
-        const endTime = performance.now();
+        const endTime2 = performance.now();
 
-        const elapsed2 = Math.floor(1000 * (endTime - startTime));
+        const elapsed2 = Math.floor(1000 * (endTime2 - startTime2));
         console.log(`Remove unique: ${elapsed2} ms / ${removes.length} urls`);
-    console.log(`start: ${startTime}`);
-    console.log(`end: ${endTime}`);
+    console.log(`startTime2: ${startTime2}`);
+    console.log(`endTime2: ${endTime2}`);
     }
 
     // Return sorted unique tabs.
@@ -81,8 +73,9 @@ async function unique(tabs) {
 }
 
 async function reset_order(sorted_tabs) {
-    const tabIds = sorted_tabs.map(t => t.id);
-    await chrome.tabs.move(tabIds, { index: 0 });
+    for (const [i, t] of sorted_tabs.entries()) {
+        await chrome.tabs.move(t.id, {"index": i});
+     }
 }
 
 async function sort_tabs(tabs) {
